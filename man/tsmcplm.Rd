@@ -11,8 +11,7 @@ tsmcplm(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c)
 
 \item{X}{the n-by-p design matrix.}
 
-\item{method}{the method to be used by lasso, adaptive lasso, mcp or scad.
-See \code{\link[plus]{plus}} in R packages \pkg{plus} for details.}
+\item{method}{the method to be used by lasso, adaptive lasso, mcp or scad.}
 
 \item{c}{ceiling(c*sqrt(length(Y))) is the length of each segments in spliting stage.}
 }
@@ -23,15 +22,15 @@ An object of class "tsmcplm" is a list containing the following components:
 \item{change.points}{estimators of change points.}
 }
 \description{
-This function provides a two stage procedure for simultaneously detecting multiple
-change points in linear models. In the cutting stage, the change point problem is
+This function provides a two‐stage procedure for simultaneously detecting multiple
+change‐points in linear models. In the cutting stage, the change‐point problem is
 converted into a model selection problem so that a modern model selection method
-can be applied. In the refining stage, the change points obtained in the cutting
+can be applied. In the refining stage, the change‐points obtained in the cutting
 stage are finalized via a refining method. The tuning parameter lambda is chosen
 by BIC.
 }
 \examples{
-## example 1: mean shift model
+## example 1 : mean shift model
 ## true change point location:
 ## 100, 130, 150, 230, 250, 400, 440, 650, 760, 780, 810
 Y <- rnorm(1000, 0, 0.5) +
@@ -53,29 +52,30 @@ tsmcplm(Y = Y, X = NULL, method = "adapt", c = 0.3)
 ## 200, 350, 450, 550, 700, and 850
 
 
-n <- 1000
+n=1000
 y <- rnorm(n)
 for (t in 2:n) {
   y[t] <- cos(t*pi/61) + 3*sin(t*pi/61) + 0.5*y[t-1] + (2*sin(t*pi/61) +
-  0.1 * y[t-1])*(200 < t)+ (2* cos(t*pi/61)- 4 *sin(t*pi/61)- 0.6* y[t-1] )*
-  (350 < t) + (2* sin(t*pi/61) + 0.7* y[t-1] )*(450 < t) + (-3* sin(t*pi/61) -
-  0.3* y[t-1] )*(550 < t) + (-3* cos(t*pi/61) + 5* sin(t*pi/61))* (700 < t) +
-  (3* cos(t*pi/61) - 5* sin(t*pi/61) - 0.4*y[t-1] )* (850 < t) + rnorm(1)
+  0.1 * y[t-1])*(200 < t)+ (2* cos(t*pi/61) - 4 *sin(t*pi/61) -
+  0.6* y[t-1] )*(350 < t) + (2* sin(t*pi/61) +
+  0.7* y[t-1] )*(450 < t) + (-3* sin(t*pi/61) -
+  0.3* y[t-1] )*(550 < t) + (-3* cos(t*pi/61) +
+  5* sin(t*pi/61))* (700 < t) + (3* cos(t*pi/61) -
+  5* sin(t*pi/61) - 0.4*y[t-1] )* (850 < t) + rnorm(1)
 }
 ts.plot(y)
 
-x <- sapply(2:n, function(t){cbind(cos(t*pi/61), sin(t*pi/61), y[t-1])},
-            simplify = FALSE)
+x <- sapply(2:n, function(t){cbind(cos(t*pi/61), sin(t*pi/61), y[t-1])}, simplify = FALSE)
 x <- do.call(rbind, x)
 tsmcplm(Y = y[-1], X = x, method = "adapt", c = 2)
 
 
 }
 \references{
-{Jin, B., Wu, Y., & Shi, X. (2016). Consistent two-stage multiple
-change-point detection in linear models. \emph{Canadian Journal of Statistics},
+{Jin, B., Wu, Y., & Shi, X. (2016). Consistent two‐stage multiple
+change‐point detection in linear models. \emph{Canadian Journal of Statistics},
 44(2), 161-179.}
 }
 \seealso{
-plus lars
+ncvreg lars
 }

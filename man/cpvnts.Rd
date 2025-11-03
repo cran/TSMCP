@@ -11,7 +11,7 @@ cpvnts(Y, method = c("mcp", "scad"), p, lam.d)
 \item{Y}{an autoregressive time series.}
 
 \item{method}{the method to be used by mcp or scad.
-See \code{\link[plus]{plus}} in R packages \pkg{plus} for details.}
+See \code{\link[ncvreg]{ncvreg}} in R packages \pkg{ncvreg} for details.}
 
 \item{p}{an upper bound of autoregressive orders.}
 
@@ -19,7 +19,7 @@ See \code{\link[plus]{plus}} in R packages \pkg{plus} for details.}
 the length of Y is smaller than 5000 and lam.d=0.01 otherwise.}
 }
 \value{
-pluscpv returns an object of class "cpvnts".
+cpvnts returns an object of class "cpvnts".
 An object of class "cpvnts" is a list containing the following components:
 
 \item{variable.selection}{a matrix of variable selection.
@@ -30,10 +30,9 @@ Element of the	matrix is 1 if the variable is selected and 0	otherwise.}
 \description{
 This function provides a novel and fast methodology for simultaneous multiple
 structural break estimation and variable selection for nonstationary time series
-models by using ASCAD or AMCP to estimate the chang points proposed by Jin, Shi and Wu (2011).
+models by using ASCAD or AMCP to estimate the chang-points proposed by Jin, Shi and Wu (2011).
 }
 \examples{
-
 ### Example 1: No change point with sample size 1000###
 
 n <- 1000
@@ -44,8 +43,9 @@ a1 <- c(1.3)
 a2 <- c(-0.8)
 
 for (j in 2:2) {
-  for (i in (cp1[j-1] + 1):cp1[j]) {
-    Y[i] <- a0[j-1] + a1[j-1] * Y[i-1] + a2[j-1] * Y[i-2] + rnorm(1)
+  for (i in (cp1[j - 1] + 1):cp1[j]) {
+    Y[i] <- a0[j - 1] + a1[j - 1] * Y[i - 1] + a2[j - 1] * Y[i - 2] +
+      rnorm(1)
   }
 }
 
@@ -121,5 +121,5 @@ scad.cp  #result of ASCAD
  nonstationary time series models. \emph{Statistics and Computing}, 23(2), 221-231.}
 }
 \seealso{
-plus
+ncvreg
 }

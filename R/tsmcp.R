@@ -11,14 +11,13 @@
 #' @param Y an response vector.
 #' @param X the n-by-p design matrix.
 #' @param method the method to be used by lasso, adaptive lasso, mcp or scad.
-#' See \code{\link[plus]{plus}} in R packages \pkg{plus} for details.
 #' @param c ceiling(c*sqrt(length(Y))) is the length of each segments in spliting stage.
 #' @return tsmcplm returns an object of class "tsmcplm".
 #' An object of class "tsmcplm" is a list containing the following components:
 #' @return \item{change.points}{estimators of change points.}
 #' @export tsmcplm
-#' @import plus lars
-#' @seealso plus lars
+#' @import ncvreg lars
+#' @seealso ncvreg lars
 #' @references {Jin, B., Wu, Y., & Shi, X. (2016). Consistent two‐stage multiple
 #' change‐point detection in linear models. \emph{Canadian Journal of Statistics},
 #' 44(2), 161-179.}
@@ -48,13 +47,12 @@
 #' y <- rnorm(n)
 #' for (t in 2:n) {
 #'   y[t] <- cos(t*pi/61) + 3*sin(t*pi/61) + 0.5*y[t-1] + (2*sin(t*pi/61) +
-#'                                                           0.1 * y[t-1])*(200 < t)+ (2* cos(t*pi/61) - 4 *sin(t*pi/61) -
-#'                                                                                       0.6* y[t-1] )*(350 < t) + (2* sin(t*pi/61) +
-#'                                                                                                                    0.7* y[t-1] )*(450 < t) + (-3* sin(t*pi/61) -
-#'                                                                                                                                                 0.3* y[t-1] )*(550 < t) + (-3* cos(t*pi/61) +
-#'                                                                                                                                                                              5* sin(t*pi/61))* (700 < t) + (3* cos(t*pi/61) -
-#'                                                                                                                                                                                                               5* sin(t*pi/61) - 0.4*y[t-1] )* (850 < t) + rnorm(1)
-#'
+#'   0.1 * y[t-1])*(200 < t)+ (2* cos(t*pi/61) - 4 *sin(t*pi/61) -
+#'   0.6* y[t-1] )*(350 < t) + (2* sin(t*pi/61) +
+#'   0.7* y[t-1] )*(450 < t) + (-3* sin(t*pi/61) -
+#'   0.3* y[t-1] )*(550 < t) + (-3* cos(t*pi/61) +
+#'   5* sin(t*pi/61))* (700 < t) + (3* cos(t*pi/61) -
+#'   5* sin(t*pi/61) - 0.4*y[t-1] )* (850 < t) + rnorm(1)
 #' }
 #' ts.plot(y)
 #'
@@ -208,7 +206,7 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
       y <- NULL
       for (t in 2:length(cp1)) {
         x[[t - 1]] <- as.matrix(X_temp[(cp1[t - 1] + 1):cp1[t],
-                                       ])
+        ])
         y[[t - 1]] <- Y_temp[(cp1[t - 1] + 1):cp1[t]]
       }
 
@@ -329,7 +327,7 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
       y <- NULL
       for (t in 2:length(cp1)) {
         x[[t - 1]] <- as.matrix(X_temp[(cp1[t - 1] + 1):cp1[t],
-                                       ])
+        ])
         y[[t - 1]] <- Y_temp[(cp1[t - 1] + 1):cp1[t]]
       }
 
@@ -357,23 +355,14 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
   }
   ############################### mcp
   if (method == "mcp") {
-    object <- plus(Xn, Y_temp, method = "mc+", gamma = 2.4, intercept = F,
-                   normalize = F, eps = 1e-30)
-    # step 1 estimate coef using BIC.
-    bic <- log(dim(Xn)[1]) * object$dim + dim(Xn)[1] * log(as.vector((1 -
-                                                                        object$r.square) * sum(Y_temp^2))/length(Y_temp))
-    step.bic <- which.min(bic)
-    mcp.coef <- coef.plus(object, lam = object$lam[step.bic])
 
+    object <- ncvreg(X = Xn, y = Y_temp, method = "MCP")
+    bic <- BIC(object)
+    step.bic = which.min(bic)
+    mcp.coef <- coef(object, lam = object$lambda[step.bic])[-1]
     mcp.coef.s <- sum(abs(mcp.coef))
-
-
-    mcp.coef.v.m <- abs(matrix(c(mcp.coef), q, (p + 1), byrow = T))
+    mcp.coef.v.m <- abs(matrix(c(mcp.coef), q, p+1, byrow = T))
     mcp.coef.m <- c(apply(mcp.coef.v.m, 1, max))
-
-
-
-
     mcp.cp <- which(mcp.coef.m != 0)
 
     if (length(mcp.cp) > 1) {
@@ -447,7 +436,7 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
       y <- NULL
       for (t in 2:length(cp1)) {
         x[[t - 1]] <- as.matrix(X_temp[(cp1[t - 1] + 1):cp1[t],
-                                       ])
+        ])
         y[[t - 1]] <- Y_temp[(cp1[t - 1] + 1):cp1[t]]
       }
 
@@ -475,13 +464,11 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
   ############################### scad
 
   if (method == "scad") {
-    object <- plus(Xn, Y_temp, method = "scad", gamma = 2.4, intercept = F,
-                   normalize = F, eps = 1e-30)
-    # step 1 estimate coef using BIC.
-    bic <- log(dim(Xn)[1]) * object$dim + dim(Xn)[1] * log(as.vector((1 -
-                                                                        object$r.square) * sum(Y_temp^2))/length(Y_temp))
-    step.bic <- which.min(bic)
-    mcp.coef <- coef.plus(object, lam = object$lam[step.bic])
+
+    object <- ncvreg(X = Xn, y = Y_temp, method = "SCAD")
+    bic <- BIC(object)
+    step.bic = which.min(bic)
+    mcp.coef <- coef(object, lam = object$lambda[step.bic])[-1]
     mcp.coef.s <- sum(abs(mcp.coef))
     mcp.coef.v.m <- abs(matrix(c(mcp.coef), q, (p + 1), byrow = T))
     mcp.coef.m <- c(apply(mcp.coef.v.m, 1, max))
@@ -558,7 +545,7 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
       y <- NULL
       for (t in 2:length(cp1)) {
         x[[t - 1]] <- as.matrix(X_temp[(cp1[t - 1] + 1):cp1[t],
-                                       ])
+        ])
         y[[t - 1]] <- Y_temp[(cp1[t - 1] + 1):cp1[t]]
       }
 
@@ -587,6 +574,7 @@ tsmcplm <- function(Y, X, method = c("lasso", "adapt", "mcp", "scad"), c) {
     return(0) else return(change.points = adcpcss.cp)
 
 }
+
 
 
 

@@ -3,4 +3,5 @@
 export(cpvnts)
 export(tsmcplm)
 import(lars)
-import(plus)
+import(ncvreg)
+importFrom("stats", "BIC", "coef")

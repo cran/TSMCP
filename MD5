@@ -1,6 +1,6 @@
-c7369f6a04762740812b6172b10d8881 *DESCRIPTION
-af71ff0ebc157bde59f78cdb7ac4fddc *NAMESPACE
-416eff73c35e1bf0c2db364954c22fa4 *R/cpvnts.R
-1dec61bca9719ffe4c5647f8aba1bd93 *R/tsmcp.R
-fc8ece6fb2a8e8afec56d34cad02aae0 *man/cpvnts.Rd
-c33dd8fbe80e914548463c1eee61a183 *man/tsmcplm.Rd
+4db05664f8cdf9112b348b3e23fe3e09 *DESCRIPTION
+cd7bdf612e0b8235014fc55caa7c26bc *NAMESPACE
+9e4e176e4fe8c04f1b42db8e16325aad *R/cpvnts.R
+2269d2acf2ad72fa67210ffd5a267491 *R/tsmcp.R
+4833029e971eddcf5e07f47230253f2c *man/cpvnts.Rd
+b0734a8129d2ad4733820af9d338669f *man/tsmcplm.Rd

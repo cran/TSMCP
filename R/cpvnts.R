@@ -64,18 +64,18 @@ css <- function(y1, x1) {
 #'
 #' @param Y an autoregressive time series.
 #' @param method the method to be used by mcp or scad.
-#' See \code{\link[plus]{plus}} in R packages \pkg{plus} for details.
+#' See \code{\link[ncvreg]{ncvreg}} in R packages \pkg{ncvreg} for details.
 #' @param p an upper bound of autoregressive orders.
 #' @param lam.d an parameter of the refining procedure. Suggest lam.d=0.05 if
 #' the length of Y is smaller than 5000 and lam.d=0.01 otherwise.
-#' @return pluscpv returns an object of class "cpvnts".
+#' @return cpvnts returns an object of class "cpvnts".
 #' An object of class "cpvnts" is a list containing the following components:
 #' @return \item{variable.selection}{a matrix of variable selection.
 #' Element of the	matrix is 1 if the variable is selected and 0	otherwise.}
 #' @return \item{change.points}{estimators of change points.}
 #' @export cpvnts
-#' @import plus
-#' @seealso plus
+#' @import ncvreg
+#' @seealso ncvreg
 #' @references {Jin, B., Shi, X., and Wu, Y. (2013). A novel and fast methodology for
 #'  simultaneous multiple structural break estimation and variable selection for
 #'  nonstationary time series models. \emph{Statistics and Computing}, 23(2), 221-231.}
@@ -171,9 +171,7 @@ cpvnts <- function(Y, method = c("mcp", "scad"), p, lam.d) {
 
 
 
-  # library("plus")  #call the plus package build in R by
-  # ZHANG(2010, Nearly unbiased variable selection under minimax concave
-  # penalty. The Annals of Statistics 38(2), 894-942)
+  # library("ncvreg")  #call the ncvreg package build in R by
   n = length(Y)
   m = 4 * ceiling(sqrt(n - p))
   q = floor((n - p)/m)
@@ -212,22 +210,27 @@ cpvnts <- function(Y, method = c("mcp", "scad"), p, lam.d) {
 
   #################### mcp#########################
   if (method == "mcp") {
-    object <- plus(X, Y_temp, method = "mc+", gamma = 2.4, intercept = F,
-                   normalize = F, eps = 1e-50)
+    # object <- plus(X, Y_temp, method = "mc+", gamma = 2.4, intercept = F,
+    #                normalize = F, eps = 1e-50)
+    #
+    # bic = log(dim(X)[1]) * object$dim + dim(X)[1] * log(as.vector((1 -
+    #                                                                  object$r.square) * sum(Y_temp^2))/length(Y_temp))
+    # step.bic = which.min(bic)
+    # mcp.coef <- coef.plus(object, lam = object$lam[step.bic])
 
-    bic = log(dim(X)[1]) * object$dim + dim(X)[1] * log(as.vector((1 -
-                                                                     object$r.square) * sum(Y_temp^2))/length(Y_temp))
+    object <- ncvreg(X = X, y = Y_temp, method = "MCP")
+    bic <- BIC(object)
     step.bic = which.min(bic)
-    mcp.coef <- coef.plus(object, lam = object$lam[step.bic])
+    mcp.coef <- coef(object, lam = object$lambda[step.bic])[-1]
+
 
     mcp.coef.s = sum(abs(mcp.coef))
     if (mcp.coef.s == 0) {
       mcp.coef.v = mcp.coef
     }
     if (mcp.coef.s > 0) {
-      object <- plus(diag(length(mcp.coef)), mcp.coef, method = "mc+",
-                     gamma = 2.4, intercept = F)
-      mcp.coef.v = coef.plus(object, lam = lam.d)
+      object <- ncvreg(X = diag(length(mcp.coef)), y = mcp.coef, method = "MCP")
+      mcp.coef.v = coef(object, lam = lam.d)[-1]
     }
 
     mcp.coef.ar = c(rep(0, q * (p + 1)))
@@ -291,9 +294,8 @@ cpvnts <- function(Y, method = c("mcp", "scad"), p, lam.d) {
       # do variable selection
       mcp.v = mcp.coef.v.m[mcp.v.i, ]
       mcp.v[which(mcp.v != 0)] = 1
-      object <- plus(diag(length(mcp.coef.ar)), mcp.coef.ar, method = "mc+",
-                     gamma = 2.4, intercept = F)
-      mcp.coef.v.c = coef.plus(object, lam = lam.d)
+      object <- ncvreg(X = diag(length(mcp.coef.ar)), y = mcp.coef.ar, method = "MCP")
+      mcp.coef.v.c = coef(object, lam = lam.d)[-1]
       mcp.coef.v.m = abs(matrix(c(mcp.coef.v.c), q, (p + 1), byrow = T))
       mcp.coef.m = c(apply(mcp.coef.v.m, 1, max))
       mcp.cp1 = which(mcp.coef.m != 0)
@@ -324,22 +326,20 @@ cpvnts <- function(Y, method = c("mcp", "scad"), p, lam.d) {
   #################### scad#########################
 
   if (method == "scad") {
-    object <- plus(X, Y_temp, method = "scad", gamma = 2.4, intercept = F,
-                   normalize = F, eps = 1e-50)
 
-    bic = log(dim(X)[1]) * object$dim + dim(X)[1] * log(as.vector((1 -
-                                                                     object$r.square) * sum(Y_temp^2))/length(Y_temp))
+
+    object <- ncvreg(X, Y_temp, method = "SCAD")
+    bic <- BIC(object)
     step.bic = which.min(bic)
-    scad.coef <- coef.plus(object, lam = object$lam[step.bic])
+    scad.coef <- coef(object, lam = object$lambda[step.bic])[-1]
 
     scad.coef.s = sum(abs(scad.coef))
     if (scad.coef.s == 0) {
       scad.coef.v = scad.coef
     }
     if (scad.coef.s > 0) {
-      object <- plus(diag(length(scad.coef)), scad.coef, method = "scad",
-                     gamma = 2.4, intercept = F)
-      scad.coef.v = coef.plus(object, lam = lam.d)
+      object <- ncvreg(X = diag(length(scad.coef)), y = scad.coef, method = "SCAD")
+      scad.coef.v = coef(object, lam = lam.d)[-1]
     }
 
     scad.coef.ar = c(rep(0, q * (p + 1)))
@@ -402,9 +402,8 @@ cpvnts <- function(Y, method = c("mcp", "scad"), p, lam.d) {
       # do variable selection
       scad.v = scad.coef.v.m[scad.v.i, ]
       scad.v[which(scad.v != 0)] = 1
-      object <- plus(diag(length(scad.coef.ar)), scad.coef.ar, method = "scad",
-                     gamma = 2.4, intercept = F)
-      scad.coef.v.c = coef.plus(object, lam = lam.d)
+      object <- ncvreg(X = diag(length(scad.coef.ar)), y = scad.coef.ar, method = "SCAD")
+      scad.coef.v.c = coef(object, lam = lam.d)[-1]
       scad.coef.v.m = abs(matrix(c(scad.coef.v.c), q, (p + 1), byrow = T))
       scad.coef.m = c(apply(scad.coef.v.m, 1, max))
       scad.cp1 = which(scad.coef.m != 0)
